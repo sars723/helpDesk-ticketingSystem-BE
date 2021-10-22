@@ -4,8 +4,14 @@ import createHttpError, { HttpError } from "http-errors";
 import { generateAccessToken } from "../../auth/tools.js";
 import { JWTAuthMiddleware } from "../../auth/token.js";
 import TicketModel from "../tickets/schema.js";
+import {
+  onlyAdminAllowedRoute,
+  onlyAdminAndSupportTeamAllowedRoute,
+} from "../../auth/adminOrSupportTeam_validation_middleware.js";
+
 const customerRouter = express.Router();
 
+// user can get all his tikets
 customerRouter.get("/me/tickets", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const tickets = await TicketModel.find({ sender: req.customer._id });
@@ -14,15 +20,22 @@ customerRouter.get("/me/tickets", JWTAuthMiddleware, async (req, res, next) => {
     next(error);
   }
 });
-customerRouter.get("/", JWTAuthMiddleware, async (req, res, next) => {
-  try {
-    const customers = await CustomerModel.find();
-    res.send(customers);
-  } catch (error) {
-    next(error);
-  }
-});
 
+//admin and support-team can get all customers
+customerRouter.get(
+  "/",
+  onlyAdminAndSupportTeamAllowedRoute,
+  JWTAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      const customers = await CustomerModel.find();
+      res.send(customers);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+// can any register
 customerRouter.post("/register", async (req, res, next) => {
   try {
     const customers = new CustomerModel(req.body);
@@ -33,8 +46,25 @@ customerRouter.post("/register", async (req, res, next) => {
   }
 });
 
+//user can see his own profile
+customerRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
+  const customerId = req.params.customerId;
+  try {
+    const customer = await CustomerModel.findById(customerId);
+    if (customer) {
+      res.status(200).send(customer);
+    } else {
+      next(createHttpError(404, `customer with id:${customerId} not found`));
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+//admin and support-team can get single customer
 customerRouter.get(
   "/:customerId",
+  onlyAdminAndSupportTeamAllowedRoute,
   JWTAuthMiddleware,
   async (req, res, next) => {
     const customerId = req.params.customerId;
@@ -51,8 +81,29 @@ customerRouter.get(
   }
 );
 
+//customer updates his own profile
+customerRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {
+  try {
+    const customerId = req.customer._id;
+    const updatedCustomer = await CustomerModel.findByIdAndUpdate(
+      customerId,
+      { $set: req.body },
+      { new: true }
+    );
+    if (updatedCustomer) {
+      res.send(updatedCustomer);
+    } else {
+      next(createHttpError(404, `customer with id${customerId} not found`));
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+//admin and support-team updates customer profile
 customerRouter.put(
   "/:customerId",
+  onlyAdminAndSupportTeamAllowedRoute,
   JWTAuthMiddleware,
   async (req, res, next) => {
     try {
@@ -73,8 +124,10 @@ customerRouter.put(
   }
 );
 
+//admin and support-team delete a cusomer
 customerRouter.delete(
   "/:customerId",
+  onlyAdminAndSupportTeamAllowedRoute,
   JWTAuthMiddleware,
   async (req, res, next) => {
     const customerId = req.params.customerId;
