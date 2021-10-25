@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import customerRouter from "./services/customers/index.js";
+import userRouter from "./services/users/index.js";
 import ticketRouter from "./services/tickets/index.js";
 const server = express();
 
@@ -10,7 +10,7 @@ const port = process.env.PORT || 3004;
 server.use(cors());
 server.use(express.json());
 
-server.use("/customers", customerRouter);
+server.use("/users", userRouter);
 server.use("/tickets", ticketRouter);
 
 mongoose.connect(process.env.MONGO_URL);

@@ -1,9 +1,7 @@
-import createHttpError from "http-errors";
 import Jwt from "jsonwebtoken";
-import CustomerModel from "../services/customers/schema.js";
 
-export const generateAccessToken = async (customer) => {
-  const accessToken = await generateAccessJWT({ _id: customer._id });
+export const generateAccessToken = async (user) => {
+  const accessToken = await generateAccessJWT({ _id: user._id });
   return accessToken;
 };
 

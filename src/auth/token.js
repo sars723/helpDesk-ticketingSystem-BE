@@ -1,6 +1,6 @@
 import createHttpError from "http-errors";
 import { verifyAccessJWT } from "./tools.js";
-import CustomerModel from "../services/customers/schema.js";
+import UserModel from "../services/users/schema.js";
 
 export const JWTAuthMiddleware = async (req, res, next) => {
   if (!req.headers.authorization) {
@@ -16,13 +16,13 @@ export const JWTAuthMiddleware = async (req, res, next) => {
       const decodedToken = await verifyAccessJWT(token);
       console.log("decodedtoken", decodedToken);
 
-      const customer = await CustomerModel.findById(decodedToken._id);
+      const user = await UserModel.findById(decodedToken._id);
 
-      if (customer) {
-        req.customer = customer;
+      if (user) {
+        req.user = user;
         next();
       } else {
-        next(createHttpError(404, "Customer not found"));
+        next(createHttpError(404, "User not found"));
       }
     } catch (error) {
       console.log(error);
