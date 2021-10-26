@@ -88,7 +88,7 @@ ticketRouter.put(
   }
 );
 ticketRouter.put(
-  "/replay/:ticketId",
+  "/reply/:ticketId",
 
   JWTAuthMiddleware,
   /* onlyAdminAndSupportTeamAllowedRoute, */
@@ -113,6 +113,7 @@ ticketRouter.put(
         next(createHttpError(404, `Ticket with id: ${ticketId} not found`));
       }
     } catch (error) {
+      console.log(error);
       next(error);
     }
   }
