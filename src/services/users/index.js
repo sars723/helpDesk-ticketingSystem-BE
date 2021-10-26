@@ -92,7 +92,7 @@ userRouter.post("/register", async (req, res, next) => {
 
 //user can see his own profile
 userRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
-  const userId = req.params.userId;
+  const userId = req.user._id;
   try {
     const user = await UserModel.findById(userId);
     if (user) {
