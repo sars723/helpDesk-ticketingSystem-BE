@@ -8,7 +8,7 @@ const server = express();
 const port = process.env.PORT || 3004;
 
 server.use(cors());
-server.use(express.json());
+server.use(express.json({ limit: "50mb" }));
 
 server.use("/users", userRouter);
 server.use("/tickets", ticketRouter);

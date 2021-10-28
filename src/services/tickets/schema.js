@@ -32,7 +32,7 @@ const TicketSchema = new Schema(
       enum: ["assigned", "new", "closed"],
       default: "new",
     },
-    file: { type: Buffer },
+    file: { type: String },
     messageHistory: [
       {
         message: { type: String, required: true },
