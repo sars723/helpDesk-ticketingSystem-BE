@@ -19,7 +19,9 @@ ticketRouter.get(
   onlyAdminAllowedRoute,
   async (req, res, next) => {
     try {
-      const tickets = await TicketModel.find().populate("messageHistory");
+      const tickets = await TicketModel.find()
+        .populate("sender")
+        .populate("messageHistory");
       res.send(tickets);
     } catch (error) {
       next(error);
@@ -31,9 +33,9 @@ ticketRouter.get(
 ticketRouter.post("/", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const { sender } = req.body;
-    console.log(sender);
+    console.log("sender email", sender);
     const user = await CustomerModel.findOne({ email: sender });
-    console.log(user);
+    console.log("sender email user", user);
     const ticket = new TicketModel({
       ...req.body,
       sender: user._id.toString(),
@@ -64,7 +66,7 @@ ticketRouter.get(
     }
   }
 );
-
+//support-team and Admin
 ticketRouter.put(
   "/:ticketId",
   JWTAuthMiddleware,
@@ -91,7 +93,7 @@ ticketRouter.put(
   "/reply/:ticketId",
 
   JWTAuthMiddleware,
-  /* onlyAdminAndSupportTeamAllowedRoute, */
+
   async (req, res, next) => {
     const ticketId = req.params.ticketId;
     const { messageHistory } = req.body;
@@ -218,6 +220,30 @@ ticketRouter.delete(
         res.status(200).send("delted");
       } else {
         next(createHttpError(404, `Ticket with id: ${ticketId} not found`));
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+//admin and support-team can delete a ticket
+ticketRouter.delete(
+  "/message/:messageId",
+
+  JWTAuthMiddleware,
+  onlyAdminAndSupportTeamAllowedRoute,
+  async (req, res, next) => {
+    const messageId = req.params.messageId;
+    try {
+      const deletedMessage = await TicketModel.updateMany(
+        {},
+        { $pull: { messageHistory: { _id: messageId } } }
+      );
+      if (deletedMessage) {
+        res.status(200).send("delted");
+      } else {
+        next(createHttpError(404, `Message with id: ${messageId} not found`));
       }
     } catch (error) {
       next(error);

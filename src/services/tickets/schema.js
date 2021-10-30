@@ -20,9 +20,22 @@ const { Schema, model } = mongoose;
 const TicketSchema = new Schema(
   {
     sender: { type: Schema.Types.ObjectId, ref: "user", required: true },
-    category: { type: String, required: true },
-    priority: { type: String, required: true },
-    dueDate: { type: Date },
+    category: {
+      type: String,
+      required: true,
+      enum: [
+        "General Sales",
+        "Payment Issue",
+        "Hardware Issue",
+        "Software Issue",
+      ],
+    },
+    priority: {
+      type: String,
+      required: true,
+      enum: ["Low", "Normal", "High", "Critical"],
+    },
+    dueDate: { type: Date, default: "" },
     subject: { type: String, required: true },
     detailInfo: { type: String, required: true },
     assignedTo: { type: String, default: "" },

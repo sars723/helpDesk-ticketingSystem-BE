@@ -9,6 +9,18 @@ import {
   onlyAdminAndSupportTeamAllowedRoute,
 } from "../../auth/adminOrSupportTeam_validation_middleware.js";
 
+import nodemailer from "nodemailer";
+import sendGridTransport from "nodemailer-sendgrid-transport";
+
+const transporter = nodemailer.createTransport(
+  sendGridTransport({
+    auth: {
+      api_key:
+        "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",
+    },
+  })
+);
+
 const userRouter = express.Router();
 
 // user can get all his tikets
@@ -44,7 +56,7 @@ userRouter.get(
   }
 );
 
-// user can update his own  tikets
+// user can update his own  tikets?????????
 userRouter.put(
   "/me/tickets/:ticketId",
   JWTAuthMiddleware,
@@ -56,6 +68,25 @@ userRouter.put(
         { $set: req.body },
         { new: true }
       );
+      res.send(tickets);
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+);
+
+// user can see detail of  his own  tikets
+userRouter.get(
+  "/me/tickets/:ticketId",
+  JWTAuthMiddleware,
+  async (req, res, next) => {
+    const ticketId = req.params.ticketId;
+    try {
+      const tickets = await TicketModel.findOne({
+        sender: req.user._id,
+        _id: ticketId,
+      });
       res.send(tickets);
     } catch (error) {
       console.log(error);
@@ -84,7 +115,14 @@ userRouter.post("/register", async (req, res, next) => {
   try {
     const users = new UserModel(req.body);
     const { _id } = await users.save();
-    res.status(201).send(_id);
+    console.log(req.body.email);
+    const email = await transporter.sendMail({
+      to: req.body.email,
+      from: "sarasalomonn@gmail.com",
+      subject: "signup success",
+      html: "<h1>welcome to strive helpDesk</h1>",
+    });
+    res.status(201).send(email);
   } catch (error) {
     next(error);
   }

@@ -9,8 +9,13 @@ export const UserSchema = new mongoose.Schema(
     role: {
       type: String,
       required: true,
-      enum: ["user", "support-team", "admin"],
+      enum: ["user", "support-team", "admin", "employee"],
       default: "user",
+    },
+    department: {
+      type: String,
+      enum: ["marketing", "IT", "support", "sales", "administration", "none"],
+      default: "none",
     },
   },
   { timestamps: true }
