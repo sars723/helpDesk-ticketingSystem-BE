@@ -7,8 +7,14 @@ import {
 import { JWTAuthMiddleware } from "../../auth/token.js";
 import TicketModel from "./schema.js";
 import CustomerModel from "../users/schema.js";
-import MessageModel from "../messages/schema.js";
-import customerRouter from "../users/index.js";
+
+//pdf
+import pdf from "html-pdf";
+import { pdfTemplate } from "../../utils/pdfTemplate.js";
+import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const ticketRouter = express.Router();
 
@@ -22,6 +28,7 @@ ticketRouter.get(
       const tickets = await TicketModel.find()
         .populate("sender")
         .populate("messageHistory");
+
       res.send(tickets);
     } catch (error) {
       next(error);
@@ -62,11 +69,12 @@ ticketRouter.get(
         next(createHttpError(404, `Ticket with id: ${ticketId} not found`));
       }
     } catch (error) {
+      console.log(error);
       next(error);
     }
   }
 );
-//support-team and Admin
+//support-team and Admin edit a ticket
 ticketRouter.put(
   "/:ticketId",
   JWTAuthMiddleware,
@@ -79,6 +87,27 @@ ticketRouter.put(
         { $set: req.body },
         { new: true }
       );
+      if (updatedTicket) {
+        res.status(200).send(updatedTicket);
+      } else {
+        next(createHttpError(404, "ticket not found"));
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+//support-team and Admin assign
+ticketRouter.put(
+  "/assign/:ticketId",
+  JWTAuthMiddleware,
+  onlyAdminAndSupportTeamAllowedRoute,
+  async (req, res, next) => {
+    const ticketId = req.params.ticketId;
+    try {
+      const updatedTicket = await TicketModel.findByIdAndUpdate(ticketId, {
+        new: true,
+      });
       if (updatedTicket) {
         res.status(200).send(updatedTicket);
       } else {
@@ -120,65 +149,7 @@ ticketRouter.put(
     }
   }
 );
-// admin and support-team can edit a specific ticket
-/* ticketRouter.put(
-  "/:ticketId",
 
-  JWTAuthMiddleware,
-  onlyAdminAndSupportTeamAllowedRoute,
-  async (req, res, next) => {
-    const ticketId = req.params.ticketId;
-    const { messageHistory } = req.body;
-
-    try {
-      if (messageHistory) {
-        const sender = await CustomerModel.findOne({
-          email: messageHistory.sender,
-        });
-        console.log("sender", sender.email);
-        if (sender) {
-          const recipient = await CustomerModel.findOne({
-            email: messageHistory.recipient,
-          });
-          console.log("recipient", recipient.email);
-          if (recipient) {
-            const updatedTicket = await TicketModel.findOneAndUpdate(ticketId, {
-              $set: req.body,
-              messageHistory: {
-                ...messageHistory,
-                sender: sender._id.toString(),
-                recipient: recipient._id.toString(),
-              },
-            });
-            console.log("updatedTicket", updatedTicket);
-            if (updatedTicket) {
-              res.status(200).send(updatedTicket);
-            } else {
-              next(
-                createHttpError(404, `Ticket with id: ${ticketId} not found`)
-              );
-            }
-          }
-        } else {
-          next(createHttpError(404, "sender email not found"));
-        }
-      } else {
-        const updatedTicket = await TicketModel.findByIdAndUpdate(
-          ticketId,
-          { $set: req.body },
-          { new: true }
-        );
-        if (updatedTicket) {
-          res.status(200).send(updatedTicket);
-        } else {
-          next(createHttpError(404, `Ticket with id: ${ticketId} not found`));
-        }
-      }
-    } catch (error) {
-      next(error);
-    }
-  }
-); */
 //admin and support-team can close a ticket
 
 ticketRouter.put(
@@ -190,15 +161,29 @@ ticketRouter.put(
     const ticketId = req.params.ticketId;
     const { status } = req.body;
     try {
-      const closedTicket = await TicketModel.findByIdAndUpdate(
-        ticketId,
-        { status: "closed" },
-        { new: true }
-      );
-      if (closedTicket) {
-        res.status(200).send(closedTicket);
+      const ticketStatus = await TicketModel.findById(ticketId);
+      if (ticketStatus.status === "new" || ticketStatus.status === "assigned") {
+        const closedTicket = await TicketModel.findByIdAndUpdate(
+          ticketId,
+          { status: "closed" },
+          { new: true }
+        );
+        if (closedTicket) {
+          res.status(200).send(closedTicket);
+        } else {
+          next(createHttpError(404, `Ticket with id: ${ticketId} not found`));
+        }
       } else {
-        next(createHttpError(404, `Ticket with id: ${ticketId} not found`));
+        const closedTicket = await TicketModel.findByIdAndUpdate(
+          ticketId,
+          { status: "new" },
+          { new: true }
+        );
+        if (closedTicket) {
+          res.status(200).send(closedTicket);
+        } else {
+          next(createHttpError(404, `Ticket with id: ${ticketId} not found`));
+        }
       }
     } catch (error) {
       next(error);
@@ -227,7 +212,7 @@ ticketRouter.delete(
   }
 );
 
-//admin and support-team can delete a ticket
+//admin and support-team can delete a message
 ticketRouter.delete(
   "/message/:messageId",
 
@@ -251,4 +236,26 @@ ticketRouter.delete(
   }
 );
 
+//pdf generation
+ticketRouter.post("/create-pdf", (req, res, next) => {
+  try {
+    pdf
+      .create(pdfTemplate(req.body), {})
+      .toFile(`${__dirname}/result.pdf`, (err) => {
+        if (err) {
+          res.send(Promise.reject());
+        }
+        res.send(Promise.resolve());
+      });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+//send the generated pdf to client
+ticketRouter.get("/get-pdf", (req, res) => {
+  console.log(process.cwd(), "process.cwd");
+  res.sendFile(`${__dirname}/result.pdf`);
+});
 export default ticketRouter;

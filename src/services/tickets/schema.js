@@ -2,21 +2,6 @@ import mongoose from "mongoose";
 
 const { Schema, model } = mongoose;
 
-/* const MessageSchema = new Schema(
-  {
-    ticket: {
-      type: Schema.Types.ObjectId,
-      ref: "Ticket",
-      required: true,
-    },
-    content: { type: String, required: true },
-    attachments: [String],
-    sender: { type: Schema.Types.ObjectId, ref: "Customer", required: true },
-    recipient: { type: Schema.Types.ObjectId, ref: "Customer", required: true },
-  },
-  { timestamps: true }
-); */
-
 const TicketSchema = new Schema(
   {
     sender: { type: Schema.Types.ObjectId, ref: "user", required: true },
@@ -35,14 +20,14 @@ const TicketSchema = new Schema(
       required: true,
       enum: ["Low", "Normal", "High", "Critical"],
     },
-    dueDate: { type: Date, default: "" },
+    dueDate: { type: Date },
     subject: { type: String, required: true },
     detailInfo: { type: String, required: true },
     assignedTo: { type: String, default: "" },
     status: {
       type: String,
       required: true,
-      enum: ["assigned", "new", "closed"],
+      enum: ["new", "closed"],
       default: "new",
     },
     file: { type: String },
@@ -51,8 +36,7 @@ const TicketSchema = new Schema(
         message: { type: String, required: true },
         attachments: [String],
         sender: {
-          type: String /* Schema.Types.ObjectId,
-          ref: "Customer" */,
+          type: String,
           required: true,
         },
         msgAt: {
@@ -62,14 +46,6 @@ const TicketSchema = new Schema(
         },
       },
     ],
-    /*  messageHistory: [MessageSchema], */
-    /*  messageHistory: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "message",
-        required: true,
-      },
-    ], */
   },
   { timestamps: true }
 );

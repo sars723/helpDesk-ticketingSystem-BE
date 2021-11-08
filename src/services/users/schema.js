@@ -5,6 +5,11 @@ export const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true },
+    avatar: {
+      type: String,
+      required: false,
+      default: "https://bit.ly/3lBk8d3",
+    },
     password: { type: String },
     role: {
       type: String,
@@ -17,6 +22,8 @@ export const UserSchema = new mongoose.Schema(
       enum: ["marketing", "IT", "support", "sales", "administration", "none"],
       default: "none",
     },
+    /* refreshToken: { type: String }, */
+    /*  googleId: { type: String }, */
   },
   { timestamps: true }
 );

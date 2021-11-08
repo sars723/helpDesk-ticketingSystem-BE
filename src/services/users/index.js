@@ -1,14 +1,14 @@
 import express from "express";
 import UserModel from "./schema.js";
 import createHttpError, { HttpError } from "http-errors";
-import { generateAccessToken } from "../../auth/tools.js";
+import { generateAccessToken /* refreshTokens */ } from "../../auth/tools.js";
 import { JWTAuthMiddleware } from "../../auth/token.js";
 import TicketModel from "../tickets/schema.js";
 import {
   onlyAdminAllowedRoute,
   onlyAdminAndSupportTeamAllowedRoute,
 } from "../../auth/adminOrSupportTeam_validation_middleware.js";
-
+import passport from "passport";
 import nodemailer from "nodemailer";
 import sendGridTransport from "nodemailer-sendgrid-transport";
 
@@ -27,8 +27,10 @@ const userRouter = express.Router();
 userRouter.get("/me/tickets", JWTAuthMiddleware, async (req, res, next) => {
   try {
     console.log(req.user);
-    const tickets = await TicketModel.find({ sender: req.user._id });
-    console.log(req.user._id);
+    const tickets = await TicketModel.find({ sender: req.user._id }).populate(
+      "sender"
+    );
+
     res.send(tickets);
   } catch (error) {
     next(error);
@@ -143,12 +145,12 @@ userRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
   }
 });
 
-//admin and support-team can get single user
+/* //admin and support-team can get single user */
 userRouter.get(
   "/:userId",
 
   JWTAuthMiddleware,
-  onlyAdminAndSupportTeamAllowedRoute,
+  /*  onlyAdminAndSupportTeamAllowedRoute, */
   async (req, res, next) => {
     const userId = req.params.userId;
     try {
@@ -246,4 +248,5 @@ userRouter.post("/login", async (req, res, next) => {
     next(error);
   }
 });
+
 export default userRouter;
