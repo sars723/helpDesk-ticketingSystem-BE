@@ -7,7 +7,22 @@ const server = express();
 
 const port = process.env.PORT || 3004;
 
-server.use(cors());
+const whiteList = [process.env.FE_DEV_URL, process.env.FE_PROD_URL];
+
+const corsOpts = {
+  origin: function (origin, next) {
+    console.log("ORIGIN --> ", origin);
+    if (!origin || whiteList.indexOf(origin) !== -1) {
+      // if received origin is in the whitelist I'm going to allow that request
+      next(null, true);
+    } else {
+      // if it is not, I'm going to reject that request
+      next(new Error(`Origin ${origin} not allowed!`));
+    }
+  },
+};
+
+server.use(cors(corsOpts));
 server.use(express.json({ limit: "50mb" }));
 
 server.use("/users", userRouter);
