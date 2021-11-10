@@ -27,9 +27,9 @@ const userRouter = express.Router();
 userRouter.get("/me/tickets", JWTAuthMiddleware, async (req, res, next) => {
   try {
     console.log(req.user);
-    const tickets = await TicketModel.find({ sender: req.user._id }).populate(
-      "sender"
-    );
+    const tickets = await TicketModel.find({ sender: req.user._id })
+      .populate("sender")
+      .populate("assignedTo");
 
     res.send(tickets);
   } catch (error) {

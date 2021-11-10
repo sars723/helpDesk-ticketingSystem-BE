@@ -23,7 +23,12 @@ const TicketSchema = new Schema(
     dueDate: { type: Date },
     subject: { type: String, required: true },
     detailInfo: { type: String, required: true },
-    assignedTo: { type: String, default: "" },
+    assignedTo: {
+      type: Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
+      default: "",
+    },
     status: {
       type: String,
       required: true,

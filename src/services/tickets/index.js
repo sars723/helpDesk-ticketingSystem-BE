@@ -27,6 +27,7 @@ ticketRouter.get(
     try {
       const tickets = await TicketModel.find()
         .populate("sender")
+        .populate("assignedTo")
         .populate("messageHistory");
 
       res.send(tickets);
