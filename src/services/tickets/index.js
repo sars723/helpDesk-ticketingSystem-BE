@@ -41,9 +41,9 @@ ticketRouter.get(
 ticketRouter.post("/", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const { sender } = req.body;
-    console.log("sender email", sender);
+    /*  console.log("sender email", sender); */
     const user = await CustomerModel.findOne({ email: sender });
-    console.log("sender email user", user);
+    /* console.log("sender email user", user); */
     const ticket = new TicketModel({
       ...req.body,
       sender: user._id.toString(),
@@ -256,7 +256,7 @@ ticketRouter.post("/create-pdf", (req, res, next) => {
 
 //send the generated pdf to client
 ticketRouter.get("/get-pdf", (req, res) => {
-  console.log(process.cwd(), "process.cwd");
+  /*  console.log(process.cwd(), "process.cwd"); */
   res.sendFile(`${__dirname}/result.pdf`);
 });
 export default ticketRouter;

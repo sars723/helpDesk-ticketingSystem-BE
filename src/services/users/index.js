@@ -1,7 +1,7 @@
 import express from "express";
 import UserModel from "./schema.js";
 import createHttpError, { HttpError } from "http-errors";
-import { generateAccessToken /* refreshTokens */ } from "../../auth/tools.js";
+import { generateAccessToken } from "../../auth/tools.js";
 import { JWTAuthMiddleware } from "../../auth/token.js";
 import TicketModel from "../tickets/schema.js";
 import {
@@ -26,7 +26,7 @@ const userRouter = express.Router();
 // user can get all his tikets
 userRouter.get("/me/tickets", JWTAuthMiddleware, async (req, res, next) => {
   try {
-    console.log(req.user);
+    /*  console.log(req.user); */
     const tickets = await TicketModel.find({ sender: req.user._id })
       .populate("sender")
       .populate("assignedTo");
@@ -40,13 +40,13 @@ userRouter.get(
   "/me/tickets/assigned",
   JWTAuthMiddleware,
   async (req, res, next) => {
-    console.log(req.user._id.toString());
+    /*   console.log(req.user._id.toString()); */
     const userId = req.user._id;
     try {
       const createdOrAssignedTickets = await TicketModel.find({
         assignedTo: userId,
       });
-      console.log(createdOrAssignedTickets);
+      /*  console.log(createdOrAssignedTickets); */
       if (createdOrAssignedTickets) {
         res.status(200).send(createdOrAssignedTickets);
       } else {
@@ -69,7 +69,9 @@ userRouter.put(
         { sender: req.user._id, _id: ticketId },
         { $set: req.body },
         { new: true }
-      );
+      )
+        .populate("sender")
+        .populate("assignedTo");
       res.send(tickets);
     } catch (error) {
       console.log(error);
@@ -88,7 +90,9 @@ userRouter.get(
       const tickets = await TicketModel.findOne({
         sender: req.user._id,
         _id: ticketId,
-      });
+      })
+        .populate("sender")
+        .populate("assignedTo");
       res.send(tickets);
     } catch (error) {
       console.log(error);
@@ -117,7 +121,7 @@ userRouter.post("/register", async (req, res, next) => {
   try {
     const users = new UserModel(req.body);
     const { _id } = await users.save();
-    console.log(req.body.email);
+    /*  console.log(req.body.email); */
     const email = await transporter.sendMail({
       to: req.body.email,
       from: "sarasalomonn@gmail.com",
@@ -236,7 +240,7 @@ userRouter.post("/login", async (req, res, next) => {
     const { email, password } = req.body;
 
     const user = await UserModel.checkCredentials(email, password);
-    console.log("userr", user);
+    /*   console.log("userr", user); */
     if (user) {
       const accessToken = await generateAccessToken(user);
 

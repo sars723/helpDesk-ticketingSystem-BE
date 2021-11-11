@@ -22,7 +22,7 @@ export const verifyAccessJWT = (token) =>
   new Promise((resolve, reject) =>
     Jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
       if (err) {
-        console.log("error is", err);
+        /* console.log("error is", err); */
         return reject(err);
       }
       resolve(decodedToken);
